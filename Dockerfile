@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Crear directorio para descargas
-RUN mkdir -p downloads
+RUN mkdir -p tmp
 
 # Comando para ejecutar el bot
 CMD ["python", "main.py"]
