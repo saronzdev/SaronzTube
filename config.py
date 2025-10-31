@@ -14,6 +14,9 @@ URL_PATTERN = re.compile(
 # YT-DLP Options
 QUALITY = "best[height<=240]/best[height<=360]/best[height<=480]/best"
 
+# Ruta absoluta al archivo cookies.txt
+COOKIES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookies.txt')
+
 YT_DLP_OPTIONS = {
   'format': QUALITY,
   'outtmpl': '%(title)s.%(ext)s',
@@ -21,7 +24,7 @@ YT_DLP_OPTIONS = {
   'no_warnings': True,
   'noprogress': True,
   'nocheckcertificate': True,
-  'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
+  'cookiefile': COOKIES_FILE if os.path.exists(COOKIES_FILE) else None,
   'ignoreerrors': False,  # No ignorar errores reales
   'extractor_args': {
     'youtube': {
