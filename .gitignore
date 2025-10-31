@@ -25,6 +25,7 @@ wheels/
 *.egg
 examples.py
 cookies.txt
+cookies.txt.bak
 
 # Entorno
 .env

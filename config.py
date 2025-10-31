@@ -17,12 +17,9 @@ YT_DLP_OPTIONS = {
   'format': QUALITY,
   'outtmpl': '%(title)s.%(ext)s',
   'quiet': True,
-  'no_warnings': True,
-  'noprogress': True,
   'nocheckcertificate': True,
   'cookiefile': COOKIES_FILE if os.path.exists(COOKIES_FILE) else None,
-  'ignoreerrors': False,
-  'extractor_args': {
+    'extractor_args': {
     'youtube': {
       'player_client': ['ios', 'android', 'mweb'],
       'skip': ['webpage'],

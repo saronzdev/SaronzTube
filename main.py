@@ -122,13 +122,17 @@ async def handle_format_selection(callback: CallbackQuery):
 async def main():
   logger.info("Bot iniciado correctamente")
   try:
-    await dp.start_polling(bot)
+    await dp.start_polling(bot, handle_signals=False)
   except Exception as e:
     logger.error(f"Error en polling: {e}")
     raise
+  finally:
+    await bot.session.close()
 
 if __name__ == "__main__":
   try:
     asyncio.run(main())
   except KeyboardInterrupt:
+    logger.info("Bot detenido")
+  except SystemExit:
     logger.info("Bot detenido")
