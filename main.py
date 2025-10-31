@@ -4,7 +4,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from dotenv import load_dotenv
 from config import URL_PATTERN
-from handlers import download_video, get_formats_with_keyboard
+from handlers import download_video, get_formats_buttons
 from middlewares import check_authorization
 
 load_dotenv()
@@ -17,8 +17,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Silenciar warnings de yt-dlp
+logging.getLogger('yt_dlp').setLevel(logging.ERROR)
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+
+# Diccionario para guardar URLs temporalmente {chat_id: url}
+user_urls = {}
 
 dp.message.middleware(check_authorization)
 
@@ -54,11 +60,7 @@ async def handler_callback(callback: CallbackQuery):
         await callback.message.answer("¡Hola!")
     elif callback.data == "despedirse":
         await callback.message.answer("¡Adiós!")
-    
-    # Opción 1: Eliminar el mensaje completamente
-    # await callback.message.delete()
-    
-    # Opción 2: Editar el mensaje y quitar botones (comenta la línea de arriba)
+
     await callback.message.edit_text("✅ Seleccionado", reply_markup=None)
 
 @dp.message(F.text)
@@ -68,26 +70,62 @@ async def handle_url(message: Message):
     return
   
   try:
-    # Mostrar formatos con botones
-    keyboard = get_formats_with_keyboard(url)
+    # Guardar URL para este usuario
+    user_urls[message.chat.id] = url
+    
+    buttons = get_formats_buttons(url)
+    rows = []
+    cancel_btn = buttons[-1] 
+    format_btns = buttons[:-1]
+    
+    for i in range(0, len(format_btns), 2):
+      rows.append(format_btns[i:i+2])
+    
+    rows.append([cancel_btn])
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
     await message.answer("📋 Selecciona el formato:", reply_markup=keyboard)
-    
-    # # Descargar
-    # await message.answer("⏳ Descargando...")
-    # file = download_video(url)
-    
-    # # Enviar video
-    # video = FSInputFile(file)
-    # await message.answer_video(video)
-    # os.remove(file)
     
   except Exception as e:
     logger.error(f"Error: {e}")
     await message.answer(f"❌ Error: {str(e)}")
 
+@dp.callback_query(F.data.startswith("fmt:"))
+async def handle_format_selection(callback: CallbackQuery):
+  
+  format_id = callback.data.split(":")[1]
+
+  if format_id == "cancel":
+    await callback.message.edit_text("❌ Descarga cancelada.", reply_markup=None)
+    user_urls.pop(callback.message.chat.id, None)
+    return
+
+  url = user_urls.get(callback.message.chat.id)
+  if not url:
+    await callback.message.edit_text("❌ Error: URL no encontrada. Envía el link nuevamente.", reply_markup=None)
+    return
+
+  await callback.message.edit_text(f"⏳ Descargando...", reply_markup=None)
+  
+  try:
+    file = download_video(url)
+    video = FSInputFile(file)
+    await callback.message.answer_video(video)
+    os.remove(file)
+    await callback.message.edit_text("✅ Descarga completada.", reply_markup=None)
+    user_urls.pop(callback.message.chat.id, None)
+    
+  except Exception as e:
+    logger.error(f"Error descargando: {e}")
+    await callback.message.answer(f"❌ Error: {str(e)}")
+
 async def main():
-  logger.info("Bot iniciado")
-  await dp.start_polling(bot)
+  logger.info("Bot iniciado correctamente")
+  try:
+    await dp.start_polling(bot)
+  except Exception as e:
+    logger.error(f"Error en polling: {e}")
+    raise
 
 if __name__ == "__main__":
   try:

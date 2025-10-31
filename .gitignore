@@ -23,7 +23,8 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-examples/
+examples.py
+cookies.txt
 
 # Entorno
 .env

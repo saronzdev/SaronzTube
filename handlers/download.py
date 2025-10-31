@@ -1,10 +1,10 @@
 import yt_dlp, os
 from config import YT_DLP_OPTIONS
-from utils import filter_useful_formats, remove_duplicate_formats, format_to_button_label
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton
+from utils import filter_useful_formats, remove_duplicate_formats, format_to_text
 
-def get_formats_with_keyboard(url: str) -> tuple[str, InlineKeyboardMarkup, list]:
-  """Obtiene formatos y genera teclado inline"""
+def get_formats_buttons(url: str) -> str:
+  """Obtiene lista simple de formatos disponibles"""
   with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
     info = ydl.extract_info(url, download=False)
     formats = info.get('formats', [])
@@ -13,26 +13,30 @@ def get_formats_with_keyboard(url: str) -> tuple[str, InlineKeyboardMarkup, list
     useful = filter_useful_formats(formats)
     unique = remove_duplicate_formats(useful)
     
-    # Crear botones inline
-    buttons = []
-    for f in unique:
-      format_id = f.get('format_id')
-      label = format_to_button_label(f)
-      
-      # Crear botón con callback_data = format_id
-      buttons.append([InlineKeyboardButton(text=label, callback_data=f"fmt_{format_id}")])
-    
-    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-    text = f"📋 Selecciona el formato que deseas descargar:"
-    
-    return text, keyboard, unique
+    # Generar texto
+    # text = f"📋 Formatos únicos: {len(unique)}\n\n"
+    # text += '\n'.join(format_to_text(f) for f in unique)
 
-def download_video(url: str, format_id: str = None) -> str:
-  """Descarga un video con el formato especificado"""
-  options = YT_DLP_OPTIONS.copy()
-  if format_id:
-    options['format'] = format_id
-  
-  with yt_dlp.YoutubeDL(options) as ydl:
+    buttons = []
+    
+    for f in unique:
+      buttons.append(InlineKeyboardButton(
+        text=format_to_text(f),
+        callback_data=f"fmt:{f.get('format_id')}"
+      )
+    )
+      
+    buttons.append(
+      InlineKeyboardButton(
+        text="❌ Cancelar",
+        callback_data="fmt:cancel"
+      )
+    )
+    
+    return buttons
+
+def download_video(url: str) -> str:
+  """Descarga un video con el formato por defecto"""
+  with yt_dlp.YoutubeDL(YT_DLP_OPTIONS) as ydl:
     info = ydl.extract_info(url, download=True)
     return ydl.prepare_filename(info)
