@@ -4,18 +4,15 @@ from aiogram.types import InlineKeyboardButton
 from utils import filter_useful_formats, remove_duplicate_formats, format_to_text
 
 def get_formats_buttons(url: str) -> str:
-  """Obtiene lista simple de formatos disponibles"""
-  with yt_dlp.YoutubeDL({'quiet': True}) as ydl:
+  options = YT_DLP_OPTIONS.copy()
+  options['quiet'] = True
+  
+  with yt_dlp.YoutubeDL(options) as ydl:
     info = ydl.extract_info(url, download=False)
     formats = info.get('formats', [])
     
-    # Limpiar y filtrar formatos
     useful = filter_useful_formats(formats)
     unique = remove_duplicate_formats(useful)
-    
-    # Generar texto
-    # text = f"📋 Formatos únicos: {len(unique)}\n\n"
-    # text += '\n'.join(format_to_text(f) for f in unique)
 
     buttons = []
     
@@ -35,8 +32,14 @@ def get_formats_buttons(url: str) -> str:
     
     return buttons
 
-def download_video(url: str) -> str:
-  """Descarga un video con el formato por defecto"""
-  with yt_dlp.YoutubeDL(YT_DLP_OPTIONS) as ydl:
+def download_video(url: str, format_id: str = None) -> str:
+  """Descarga un video con el formato especificado o el por defecto"""
+  options = YT_DLP_OPTIONS.copy()
+  
+  # Si se especifica un formato, usarlo; sino usar el por defecto
+  if format_id:
+    options['format'] = format_id
+  
+  with yt_dlp.YoutubeDL(options) as ydl:
     info = ydl.extract_info(url, download=True)
     return ydl.prepare_filename(info)

@@ -108,7 +108,7 @@ async def handle_format_selection(callback: CallbackQuery):
   await callback.message.edit_text(f"⏳ Descargando...", reply_markup=None)
   
   try:
-    file = download_video(url)
+    file = download_video(url, format_id)
     video = FSInputFile(file)
     await callback.message.answer_video(video)
     os.remove(file)
