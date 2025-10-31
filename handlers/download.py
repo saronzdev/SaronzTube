@@ -6,6 +6,8 @@ from utils import filter_useful_formats, remove_duplicate_formats, format_to_tex
 def get_formats_buttons(url: str) -> str:
   options = YT_DLP_OPTIONS.copy()
   options['quiet'] = True
+  # Remover 'format' para obtener TODOS los formatos disponibles
+  options.pop('format', None)
   
   with yt_dlp.YoutubeDL(options) as ydl:
     info = ydl.extract_info(url, download=False)
@@ -36,9 +38,10 @@ def download_video(url: str, format_id: str = None) -> str:
   """Descarga un video con el formato especificado o el por defecto"""
   options = YT_DLP_OPTIONS.copy()
   
-  # Si se especifica un formato, usarlo; sino usar el por defecto
+  # Si se especifica un formato, usarlo con fallback
   if format_id:
-    options['format'] = format_id
+    # Intentar formato específico, si falla usar el mejor disponible
+    options['format'] = f"{format_id}/best"
   
   with yt_dlp.YoutubeDL(options) as ydl:
     info = ydl.extract_info(url, download=True)

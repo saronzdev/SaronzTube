@@ -42,10 +42,19 @@ try:
         info = ydl.extract_info(TEST_URL, download=False)
         print(f"   ✅ Éxito!")
         print(f"   - Título: {info.get('title', 'N/A')[:50]}...")
-        print(f"   - Formatos: {len(info.get('formats', []))}")
+        formats = info.get('formats', [])
+        print(f"   - Formatos totales: {len(formats)}")
+        
+        # Mostrar algunos formatos de ejemplo
+        print("\n   Primeros 5 formatos:")
+        for i, f in enumerate(formats[:5]):
+            fid = f.get('format_id', 'N/A')
+            ext = f.get('ext', 'N/A')
+            res = f.get('resolution', 'N/A')
+            print(f"   {i+1}. ID:{fid} - {res} ({ext})")
         
 except Exception as e:
-    print(f"   ❌ Error: {str(e)[:100]}")
+    print(f"   ❌ Error: {str(e)[:200]}")
     print("\n💡 Posibles causas:")
     print("   - Cookies expiradas o mal formateadas")
     print("   - IP de Azure bloqueada por YouTube")
