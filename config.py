@@ -19,6 +19,8 @@ YT_DLP_OPTIONS = {
   'outtmpl': '%(title)s.%(ext)s',
   'format': QUALITY,
   'quiet': True,
+  'noprogress': True,
+  'no_warnings': True,
   'cookiefile': cookies_path,
   'user_agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0',
   'http_headers': {

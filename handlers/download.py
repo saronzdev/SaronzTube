@@ -77,17 +77,37 @@ def download_video(url: str, format_id: str = None) -> str:
     vcodec = (fmt_obj.get('vcodec') or '').lower()
     acodec = (fmt_obj.get('acodec') or '').lower()
     fid = fmt_obj.get('format_id')
+    height = fmt_obj.get('height') or 0
     is_video_only = vcodec != 'none' and acodec == 'none'
     is_audio_only = vcodec == 'none' and acodec != 'none'
     has_both = vcodec != 'none' and acodec != 'none'
+    # Limitar audio según resolución para evitar tamaños desproporcionados
+    def _audio_cap(h):
+      if h <= 144:
+        return 64
+      if h <= 360:
+        return 96
+      if h <= 480:
+        return 128
+      return 160
+
+    abr_cap = _audio_cap(height)
+
     if has_both:
-      return f"id={fid}"
+      # Seleccionar exactamente ese id; fallback limitado por altura
+      return f"id={fid}/best[height<={height}]"
     if is_video_only:
-      return f"bestvideo[id={fid}]+bestaudio"
+      # Combinar con bestaudio limitado por abr; fallback restringido por altura
+      return (
+        f"bestvideo[id={fid}]+bestaudio[abr<={abr_cap}]"
+        f"/bestvideo[height<={height}]+bestaudio[abr<={abr_cap}]"
+        f"/best[height<={height}]"
+      )
     if is_audio_only:
-      return f"bestaudio[id={fid}]/bestaudio"
-    # fallback genérico por id
-    return f"id={fid}"
+      # Mantener audio solamente; fallback a bestaudio con límite
+      return f"bestaudio[id={fid}]/bestaudio[abr<={abr_cap}]/bestaudio"
+    # fallback genérico por id con límite de altura si existe
+    return f"id={fid}/best[height<={height}]"
 
   # Si se especifica un formato, validarlo contra la lista actual de formatos
   if format_id:
@@ -99,9 +119,8 @@ def download_video(url: str, format_id: str = None) -> str:
       selected = next((f for f in formats if str(f.get('format_id')) == str(format_id)), None)
     fmt_str = _build_format_string(selected)
     if fmt_str:
-      # Añadir fallback general a la cadena definida en config (QUALITY dentro de options['format'])
-      # QUALITY viene embebido en options['format'] por defecto; aquí lo reforzamos añadiendo '/best' si no se define
-      options['format'] = f"{fmt_str}/best"
+      # Usar la cadena robusta que ya incluye fallbacks limitados por altura
+      options['format'] = fmt_str
     else:
       # Si no encontramos el formato, usa la calidad por defecto del proyecto
       options.pop('format', None)
