@@ -3,10 +3,9 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from dotenv import load_dotenv
-from config import URL_PATTERN, isUbuntu, yt_opts
+from config import URL_PATTERN
 from handlers import download_video, get_formats_buttons
 from middlewares import check_authorization
-import yt_dlp
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -16,15 +15,13 @@ logging.basicConfig(
   format='%(asctime)s | %(levelname)-8s | %(message)s',
   datefmt='%Y-%m-%d %H:%M:%S'
 )
-logger = logging.getLogger(__name__)
 
-# Silenciar warnings de yt-dlp
+logger = logging.getLogger(__name__)
 logging.getLogger('yt_dlp').setLevel(logging.ERROR)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-# Diccionario para guardar URLs temporalmente {chat_id: url}
 user_urls = {}
 
 dp.message.middleware(check_authorization)
@@ -67,19 +64,13 @@ async def handler_callback(callback: CallbackQuery):
 @dp.message(F.text)
 async def handle_url(message: Message):
   url = message.text
+  
   if not URL_PATTERN.search(url):
     return
   
   try:
-    # Guardar URL para este usuario
     user_urls[message.chat.id] = url
-    
-    if isUbuntu():
-        await message.answer("✅ URL recibida. Procesando en Ubuntu...")
-        yt_dlp.YoutubeDL(yt_opts).download([url])
-        return
-    else:
-        await message.answer("✅ URL recibida. Procesando...")
+    await message.answer("✅ URL recibida. Procesando...")
 
     buttons = get_formats_buttons(url)
     rows = []
@@ -118,7 +109,7 @@ async def handle_format_selection(callback: CallbackQuery):
   try:
     file = download_video(url, format_id)
     video = FSInputFile(file)
-    await callback.message.answer_video(video)
+    await callback.message.answer_document(video)
     os.remove(file)
     await callback.message.edit_text("✅ Descarga completada.", reply_markup=None)
     user_urls.pop(callback.message.chat.id, None)
