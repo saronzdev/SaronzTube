@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 cookies_path = os.getenv("COOKIES_PATH", "cookies.txt")
+print(cookies_path, os.path.exists(cookies_path))
 
 allowed_users_str = os.getenv("ALLOWED_USERS", "")
 ALLOWED_USERS = [int(uid) for uid in allowed_users_str.split(",") if uid.strip()] if allowed_users_str else []
