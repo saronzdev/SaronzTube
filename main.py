@@ -3,9 +3,10 @@ from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from dotenv import load_dotenv
-from config import URL_PATTERN
+from config import URL_PATTERN, isUbuntu, yt_opts
 from handlers import download_video, get_formats_buttons
 from middlewares import check_authorization
+import yt_dlp
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -73,6 +74,13 @@ async def handle_url(message: Message):
     # Guardar URL para este usuario
     user_urls[message.chat.id] = url
     
+    if isUbuntu():
+        await message.answer("✅ URL recibida. Procesando en Ubuntu...")
+        yt_dlp.YoutubeDL(yt_opts).download([url])
+        return
+    else:
+        await message.answer("✅ URL recibida. Procesando...")
+
     buttons = get_formats_buttons(url)
     rows = []
     cancel_btn = buttons[-1] 

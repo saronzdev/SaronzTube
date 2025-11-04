@@ -30,6 +30,24 @@ _cookies_candidates = [
 ]
 COOKIES_FILE = next((p for p in _cookies_candidates if os.path.exists(p)), None)
 
+yt_opts = {
+  'outtmpl': '%(title)s.%(ext)s',
+  'quality': QUALITY,
+  'quiet': True,
+  'cookiefile': '/home/azureuser/Dev/python/SaronzTube/cookies.txt',
+  'user_agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0',
+  'extractor_args': {
+    'youtube': {
+      'player_client': ['ios', 'android', 'mweb'],
+      'skip': ['webpage'],
+    }
+  }
+}
+
+def isUbuntu():
+    system = os.popen("lsb_release -is").read()
+    return system.strip().lower() == "ubuntu"
+
 YT_DLP_OPTIONS = {
   'format': QUALITY,
   'outtmpl': '%(title)s.%(ext)s',

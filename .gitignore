@@ -26,6 +26,7 @@ wheels/
 examples.py
 cookies.txt
 cookies.txt.bak
+test.py
 
 # Entorno
 .env

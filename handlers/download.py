@@ -11,6 +11,8 @@ def get_formats_buttons(url: str):
   base['quiet'] = True
   # Remover 'format' para obtener TODOS los formatos disponibles
   base.pop('format', None)
+  # Usar extractor por defecto de escritorio (evitar clientes móviles que limitan a 360p)
+  base.pop('extractor_args', None)
 
   def _extract(options):
     with yt_dlp.YoutubeDL(options) as ydl:
@@ -60,6 +62,8 @@ def get_formats_buttons(url: str):
 def download_video(url: str, format_id: str = None) -> str:
   """Descarga un video con el formato especificado o el por defecto"""
   options = YT_DLP_OPTIONS.copy()
+  # Para descargas de alta calidad, permitir que yt-dlp use el extractor web completo
+  options.pop('extractor_args', None)
 
   def _build_format_string(fmt_obj):
     """Construye una cadena de formato robusta basada en el formato elegido.
