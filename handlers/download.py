@@ -41,13 +41,14 @@ def get_formats_buttons(url: str):
       info = _extract(minimal)
 
   formats = info.get('formats', []) if info else []
+  duration = info.get('duration') if info else None
   useful = filter_useful_formats(formats)
   unique = remove_duplicate_formats(useful)
 
   buttons = []
   for f in unique:
     buttons.append(InlineKeyboardButton(
-      text=format_to_text(f),
+      text=format_to_text(f, duration),
       callback_data=f"fmt:{f.get('format_id')}"
     ))
   buttons.append(
@@ -62,7 +63,6 @@ def get_formats_buttons(url: str):
 def download_video(url: str, format_id: str = None) -> str:
   """Descarga un video con el formato especificado o el por defecto"""
   options = YT_DLP_OPTIONS.copy()
-  # Para descargas de alta calidad, permitir que yt-dlp use el extractor web completo
   options.pop('extractor_args', None)
 
   def _build_format_string(fmt_obj):
@@ -134,6 +134,7 @@ def download_video(url: str, format_id: str = None) -> str:
     # Reintento con fallback fuerte
     fallback_opts = YT_DLP_OPTIONS.copy()
     fallback_opts['quiet'] = options.get('quiet', True)
+    fallback_opts.pop('extractor_args', None)
     with yt_dlp.YoutubeDL(fallback_opts) as ydl:
       info = ydl.extract_info(url, download=True)
       return ydl.prepare_filename(info)

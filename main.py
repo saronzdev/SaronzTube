@@ -109,7 +109,7 @@ async def handle_format_selection(callback: CallbackQuery):
   try:
     file = download_video(url, format_id)
     video = InputFile(file)
-    await bot.send_video(chat_id=callback.message.chat.id, video=video)
+    await bot.send_document(chat_id=callback.message.chat.id, document=video)
     # await callback.message.answer_document(video)
     os.remove(file)
     await callback.message.edit_text("✅ Descarga completada.", reply_markup=None)
