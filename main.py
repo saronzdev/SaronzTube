@@ -90,10 +90,19 @@ async def handle_format_selection(callback: CallbackQuery):
   
   try:
     file = download_video(url, format_id)
-    with open(file, 'rb') as video_file:
-      host_msg = await bot.send_video(chat_id=HOST_CHANNEL_ID, video=video_file, caption=f"Video descargado para {callback.message.chat.id}", supports_streaming=True)
+    video = FSInputFile(file)
+    host_msg = await bot.send_video(
+      chat_id=HOST_CHANNEL_ID, 
+      video=video, 
+      caption=f"Video descargado para {callback.message.chat.id}", 
+      supports_streaming=True
+    )
     
-    await bot.forward_message(chat_id=callback.message.chat.id, from_chat_id=HOST_CHANNEL_ID, message_id=host_msg.message_id)
+    await bot.forward_message(
+      chat_id=callback.message.chat.id, 
+      from_chat_id=HOST_CHANNEL_ID, 
+      message_id=host_msg.message_id
+    )
 
     os.remove(file)
     await callback.message.edit_text("✅ Descarga completada.", reply_markup=None)
