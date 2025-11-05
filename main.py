@@ -9,6 +9,7 @@ from middlewares import check_authorization
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+HOST_CHANNEL_ID = os.getenv("HOST_CHANNEL_ID")
 
 logging.basicConfig(
   level=logging.INFO,
@@ -41,25 +42,6 @@ async def cmd_help(message: Message):
     "/help - Mostrar ayuda\n\n"
     "Envía una URL de video para descargarlo."
   )
-
-@dp.message(Command("test"))
-async def cmd_test(message: Message):
-    btn_1 = InlineKeyboardButton(text="Saludar", callback_data="saludar")
-    btn_2 = InlineKeyboardButton(text="Despedirse", callback_data="despedirse")
-    btns = [[btn_1, btn_2]]
-    markup = InlineKeyboardMarkup(inline_keyboard=btns)
-    await message.answer("Elige uno", reply_markup=markup)
-
-@dp.callback_query(F.data.in_(["saludar", "despedirse"]))
-async def handler_callback(callback: CallbackQuery):
-    await callback.answer()
-    
-    if callback.data == "saludar":
-        await callback.message.answer("¡Hola!")
-    elif callback.data == "despedirse":
-        await callback.message.answer("¡Adiós!")
-
-    await callback.message.edit_text("✅ Seleccionado", reply_markup=None)
 
 @dp.message(F.text)
 async def handle_url(message: Message):
@@ -108,9 +90,11 @@ async def handle_format_selection(callback: CallbackQuery):
   
   try:
     file = download_video(url, format_id)
-    video = FSInputFile(file)
-    await bot.send_document(chat_id=callback.message.chat.id, document=video)
-    # await callback.message.answer_document(video)
+    with open(file, 'rb') as video_file:
+      host_msg = await bot.send_video(chat_id=HOST_CHANNEL_ID, video=video_file, caption=f"Video descargado para {callback.message.chat.id}", supports_streaming=True)
+    
+    await bot.forward_message(chat_id=callback.message.chat.id, from_chat_id=HOST_CHANNEL_ID, message_id=host_msg.message_id)
+
     os.remove(file)
     await callback.message.edit_text("✅ Descarga completada.", reply_markup=None)
     user_urls.pop(callback.message.chat.id, None)
