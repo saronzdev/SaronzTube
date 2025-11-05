@@ -91,7 +91,6 @@ async def handle_format_selection(callback: CallbackQuery):
   try:
     file = download_video(url, format_id)
     # video = FSInputFile(file)
-    video = BufferedInputFile.from_path(file)
     with open(file, 'rb') as f:
       video = BufferedInputFile(f.read(), filename=os.path.basename(file))
     
