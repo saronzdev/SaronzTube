@@ -1,7 +1,7 @@
 import asyncio, logging, os
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import Message, FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import Message, FSInputFile, BufferedInputFile,InlineKeyboardMarkup, CallbackQuery
 from dotenv import load_dotenv
 from config import URL_PATTERN
 from handlers import download_video, get_formats_buttons
@@ -90,10 +90,11 @@ async def handle_format_selection(callback: CallbackQuery):
   
   try:
     file = download_video(url, format_id)
-    video = FSInputFile(file)
-    host_msg = await bot.send_video(
+    # video = FSInputFile(file)
+    video = BufferedInputFile.from_path(file)
+    host_msg = await bot.send_document(
       chat_id=HOST_CHANNEL_ID, 
-      video=video, 
+      document=video, 
       caption=f"Video descargado para {callback.message.chat.id}", 
       supports_streaming=True
     )
