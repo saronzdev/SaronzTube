@@ -92,6 +92,9 @@ async def handle_format_selection(callback: CallbackQuery):
     file = download_video(url, format_id)
     # video = FSInputFile(file)
     video = BufferedInputFile.from_path(file)
+    with open(file, 'rb') as f:
+      video = BufferedInputFile(f.read(), filename=os.path.basename(file))
+    
     host_msg = await bot.send_document(
       chat_id=HOST_CHANNEL_ID, 
       document=video, 
